@@ -102,9 +102,11 @@ const path = require('node:path');
         await screenshot(name);
     };
     const run = async marker => {
-        await evaluate(`document.querySelector('#matlab-code').value = ${JSON.stringify(marker)};
-            document.querySelector('#run-form').requestSubmit()`);
-        assert.equal(await evaluate('document.querySelector("#run-button").disabled'), true);
+        // Read the synchronous busy state before a fast response can finish
+        // between separate DevTools evaluations.
+        assert.equal(await evaluate(`document.querySelector('#matlab-code').value = ${JSON.stringify(marker)};
+            document.querySelector('#run-form').requestSubmit();
+            document.querySelector('#run-button').disabled`), true);
         await waitFor('!document.querySelector("#run-button").disabled');
         await evaluate('document.querySelectorAll("#figure-workspace img").forEach(image => image.loading = "eager")');
         await waitFor('[...document.querySelectorAll("#figure-workspace img")].every(image => image.complete && image.naturalWidth > 0)');
