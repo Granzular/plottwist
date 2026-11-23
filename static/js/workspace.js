@@ -10,6 +10,91 @@
     const matlabDownloadHelp = document.querySelector('#matlab-download-help');
     let running = false;
 
+    const copyTimers = new WeakMap();
+    const copying = new WeakSet();
+    const updateCopyControls = () => {
+        document.querySelectorAll('[data-copy-target]').forEach(action => {
+            action.hidden = false;
+            if (action.dataset.copyTarget === 'matlab') action.disabled = !source.value;
+        });
+    };
+
+    const fallbackCopy = (text) => {
+        const active = document.activeElement;
+        const start = active.selectionStart;
+        const end = active.selectionEnd;
+        const direction = active.selectionDirection;
+        const selection = window.getSelection();
+        const ranges = Array.from({length: selection.rangeCount}, (_, index) => selection.getRangeAt(index));
+        const temporary = document.createElement('textarea');
+        temporary.value = text;
+        temporary.readOnly = true;
+        temporary.style.cssText = 'position:fixed;left:-9999px;top:0;';
+        // Clipboard event data preserves even CRLF in the original Python text.
+        const preserveText = (event) => {
+            if (!event.clipboardData) return;
+            event.clipboardData.setData('text/plain', text);
+            event.preventDefault();
+        };
+        document.body.append(temporary);
+        document.addEventListener('copy', preserveText);
+        try {
+            temporary.select();
+            if (!document.execCommand('copy')) throw new Error('Copy failed');
+        } finally {
+            document.removeEventListener('copy', preserveText);
+            temporary.remove();
+            active.focus({preventScroll: true});
+            if (typeof start === 'number') active.setSelectionRange(start, end, direction);
+            else {
+                selection.removeAllRanges();
+                ranges.forEach(range => selection.addRange(range));
+            }
+        }
+    };
+
+    // Delegation also handles the Python control after Django replaces results.
+    document.querySelector('#workspace').addEventListener('click', async (event) => {
+        const action = event.target.closest('[data-copy-target]');
+        if (!action || action.disabled || copying.has(action)) return;
+        event.preventDefault();
+        const target = action.dataset.copyTarget;
+        const feedback = document.querySelector(`#${target}-copy-status`);
+        const copyLabel = action.querySelector('[data-copy-label]');
+        clearTimeout(copyTimers.get(action));
+        feedback.textContent = '';
+        copyLabel.textContent = 'Copy';
+        // Keep native focus while ignoring repeat clicks during the write.
+        copying.add(action);
+        action.setAttribute('aria-disabled', 'true');
+        try {
+            // Read at click time. JSON avoids HTML's line-ending normalization.
+            const text = target === 'matlab' ? source.value
+                : JSON.parse(results.querySelector('#python-source').textContent);
+            if (navigator.clipboard?.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch {
+                    fallbackCopy(text);
+                }
+            } else fallbackCopy(text);
+            copyLabel.textContent = 'Copied';
+            feedback.textContent = target === 'matlab' ? 'MATLAB source copied.' : 'Python code copied.';
+            copyTimers.set(action, setTimeout(() => {
+                copyLabel.textContent = 'Copy';
+                feedback.textContent = '';
+            }, 2500));
+        } catch {
+            feedback.textContent = 'Copy failed. Select the code and copy it manually.';
+        } finally {
+            copying.delete(action);
+            action.removeAttribute('aria-disabled');
+            action.disabled = target === 'matlab' && !source.value;
+        }
+    });
+    source.addEventListener('input', updateCopyControls);
+    updateCopyControls();
+
     // The current checkboxes are the selection state. Delegated handlers survive
     // result replacement without registering another set of event listeners.
     const updateSelection = () => {
@@ -58,6 +143,7 @@
     clearSource.addEventListener('click', () => {
         if (running) return;
         source.value = '';
+        updateCopyControls();
         status.textContent = 'Source cleared. Enter MATLAB code to run.';
         source.focus();
     });
@@ -100,6 +186,7 @@
             if (typeof result.html !== 'string') throw new Error('The response could not be read. Try again.');
             // HTML is rendered by Django with autoescaping; provider text is never inserted directly.
             results.innerHTML = result.html;
+            updateCopyControls();
             updateSelection();
             matlabDownload.hidden = !result.matlab_download_url;
             matlabDownloadHelp.hidden = !result.matlab_download_url;

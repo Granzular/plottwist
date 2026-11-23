@@ -123,6 +123,22 @@ Refer to `.env.example` for the expected configuration variables.
 
 The root `.env` is loaded with python-dotenv. Existing process environment variables take precedence. SQLite remains at `db.sqlite3`; templates and static sources use the root `templates/` and `static/` directories. Media is configured at `/media/` with local storage in `media/`; no upload or media-serving workflow is implemented yet.
 
+WhiteNoise serves collected application assets at `/static/`. Before starting a
+deployment (or testing with `DJANGO_DEBUG=False`), run:
+
+```bash
+uv run python manage.py collectstatic --noinput
+```
+
+Assets are collected into the ignored `staticfiles/` directory, with compressed
+copies and manifest-hashed URLs. Tailwind's `static/css/input.css` is build source
+and is excluded from collection; rebuild `static/css/app.css` with the standalone
+CLI before collecting after frontend changes. To exercise WhiteNoise locally
+instead of Django's development static handler, use
+`uv run python manage.py runserver --nostatic` after collecting. WhiteNoise does
+not serve `media/` or private `.cache/executions/` artifacts; their existing
+session-protected view/download endpoints remain responsible for delivery.
+
 Reuse your existing `GROQ_API_KEY`; it does not need to be copied into `.env`. On Windows, restart your terminal/server after changing user environment variables so the process inherits them. No credentials are stored in committed files.
 
 ## Translation service
@@ -252,6 +268,13 @@ side by side above the figure workspace and command window; mobile stacks
 MATLAB, generated Python, figures, then output. The existing fonts, typography,
 and colour palette are retained. Python remains read-only. Clearing the editor
 does not change the submitted source associated with the displayed results.
+
+Each code panel has a keyboard-accessible Copy control. MATLAB copying reads
+the current editor value; Python copying preserves the complete generated source,
+including indentation and line endings. Copying uses the browser Clipboard API
+with a local fallback, briefly shows `Copied` on success, and reports failure
+with manual-copy guidance. Empty code cannot be copied. Source downloads remain
+available independently and continue to refer to the displayed stored run.
 
 Responses distinguish `validation`, `translation`, `execution`, `storage`, and
 `complete` stages. They include generated Python, translation warnings, public

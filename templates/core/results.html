@@ -3,13 +3,18 @@
         <h2 id="python-heading" class="text-base font-semibold">Generated Python</h2>
         <div class="flex flex-wrap items-center gap-x-4">
             <span class="font-mono text-xs text-muted">Read only</span>
+            <button id="copy-python" type="button" data-copy-target="python" hidden {% if not result.python_code %}disabled{% endif %} aria-label="Copy generated Python code" aria-describedby="python-copy-status" class="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-accent disabled:cursor-default disabled:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                <svg aria-hidden="true" viewBox="0 0 16 16" class="size-3.5 fill-none stroke-current" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1"/><path d="M10.5 3.5v-1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h1"/></svg>
+                <span data-copy-label>Copy</span>
+            </button>
             {% if result.python_code and result.execution_id %}
             <a href="{% url 'core:download_python' result.execution_id %}" class="download-link inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Download Python</a>
             {% endif %}
         </div>
     </div>
     <pre id="python-code" tabindex="0" aria-label="Generated Python output, read only" class="max-h-[32rem] min-h-80 flex-1 overflow-auto p-4 font-mono text-sm leading-7 text-ink focus-visible:outline-2 focus-visible:outline-accent sm:min-h-104"><code>{% if result.python_code %}{{ result.python_code }}{% else %}# Generated Python will appear here.{% endif %}</code></pre>
-    <div class="border-t border-rule px-4 py-3 text-sm leading-6 text-muted">Read-only translation{% if result.warnings %} · <a href="#warnings-heading" class="text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Translation warnings ({{ result.warnings|length }})</a>{% endif %}</div>
+    {{ result.python_code|json_script:"python-source" }}
+    <div class="border-t border-rule px-4 py-3 text-sm leading-6 text-muted">Read-only translation{% if result.warnings %} · <a href="#warnings-heading" class="text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Translation warnings ({{ result.warnings|length }})</a>{% endif %} <span id="python-copy-status" role="status" aria-live="polite" aria-atomic="true"></span></div>
 </section>
 <section id="figure-workspace" aria-labelledby="plots-heading" class="min-w-0 overflow-hidden rounded-md border border-rule bg-surface lg:col-span-2">
     <div class="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-rule px-4 py-2">
