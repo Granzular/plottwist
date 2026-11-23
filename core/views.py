@@ -28,6 +28,9 @@ def _owner(request):
 def _presentation(result):
     public = {key: value for key, value in result.items() if key not in {'owner', 'created', 'matlab_code'}}
     execution_id = public['execution_id']
+    public['matlab_download_url'] = (
+        reverse('core:download_matlab', args=[execution_id]) if execution_id else None
+    )
     public['figures'] = [
         {**figure, 'index': index, 'url': reverse('core:figure', args=[execution_id, index])}
         for index, figure in enumerate(public['figures'])
@@ -136,16 +139,25 @@ def figure(request, execution_id, index):
 @require_GET
 def download(request, execution_id, kind, format, index=0):
     result = _stored_result(request, execution_id)
+    if kind == 'combined':
+        values = (request.GET.getlist('indices')
+                  if 'indices' in request.GET or 'selection' in request.GET else None)
+        try:
+            indices = artifacts.selected_figure_indices(result, values)
+        except ValueError as exc:
+            return JsonResponse({'error': str(exc)}, status=400)
     try:
         if kind == 'python':
             artifact = exports.export_python(result['python_code'])
+        elif kind == 'matlab':
+            artifact = exports.export_matlab(result['matlab_code'])
         elif kind == 'figure':
             selected = artifacts.read_figure(result, index)
             artifact = exports.export_figure([selected], format=format)
             extension = artifact['name'].rsplit('.', 1)[1]
             artifact['name'] = f'figure-{index + 1:03d}.{extension}'
         else:
-            figures = [artifacts.read_figure(result, i) for i in range(len(result['figures']))]
+            figures = [artifacts.read_figure(result, i) for i in indices]
             artifact = exports.export_figures(figures, format=format)
     except (FileNotFoundError, IndexError) as exc:
         raise Http404('This figure is unavailable.') from exc

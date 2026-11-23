@@ -14,4 +14,6 @@ urlpatterns = [
          views.download, {'kind': 'combined'}, name='download_figures'),
     path('results/<uuid:execution_id>/python/',
          views.download, {'kind': 'python', 'format': 'py'}, name='download_python'),
+    path('results/<uuid:execution_id>/matlab/',
+         views.download, {'kind': 'matlab', 'format': 'm'}, name='download_matlab'),
 ]

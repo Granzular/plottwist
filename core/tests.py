@@ -28,7 +28,7 @@ from docx import Document
 
 from .translation import translate_matlab
 from .execution import execute_python, MAX_OUTPUT_BYTES, MAX_SOURCE_BYTES
-from .exports import export_figure, export_figures, export_python
+from .exports import export_figure, export_figures, export_matlab, export_python
 from . import artifacts
 
 
@@ -44,9 +44,10 @@ class HomepageTests(TestCase):
         self.assertTemplateUsed(response, 'core/home.html')
         self.assertContains(response, 'plottwist')
         self.assertContains(response, 'MATLAB to Python. Code to plots.')
-        self.assertContains(response, 'MATLAB code')
+        self.assertContains(response, 'MATLAB source')
         self.assertContains(response, 'Generated Python')
-        self.assertContains(response, 'Plots')
+        self.assertContains(response, 'Figures')
+        self.assertContains(response, 'Command window')
 
 
 @override_settings(
@@ -583,6 +584,20 @@ class ExportTests(SimpleTestCase):
             with self.subTest(source=source):
                 self.assertEqual(export_python(source)['data'], source.encode('utf-8'))
 
+    def test_matlab_source_export_preserves_text_exactly(self):
+        source = '% Signal π\r\n\r\n  x = [1,\t2];  \n% trailing spaces  \r\n'
+        artifact = export_matlab(source)
+        self.assert_artifact(artifact, 'generated.m', 'text/x-matlab; charset=utf-8')
+        self.assertEqual(artifact['data'], source.encode('utf-8'))
+        self.assertEqual(export_matlab('unformatted MATLAB (')['data'], b'unformatted MATLAB (')
+
+    def test_invalid_matlab_source_export(self):
+        for source in ('', ' \r\n\t', '\ud800'):
+            with self.subTest(source=repr(source)), self.assertRaises(ValueError):
+                export_matlab(source)
+        with self.assertRaises(TypeError):
+            export_matlab(None)
+
     def test_invalid_figure_indices(self):
         for index in (-1, len(self.figures), 100):
             with self.subTest(index=index), self.assertRaises(IndexError):
@@ -695,6 +710,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(artifacts.read_figure(metadata, 0)['data'], self.figures[0]['data'])
         home = self.client.get(reverse('core:home'))
         self.assertContains(home, 'Download Python')
+        self.assertContains(home, 'Download MATLAB')
         self.assertContains(home, 'Combined PDF')
         self.assertContains(home, 'Combined DOCX')
         self.assertContains(home, 'Figure 2')
@@ -705,6 +721,70 @@ class WorkflowTests(TestCase):
         self.assertContains(home, 'id="python-code"')
         self.assertNotContains(home, '<textarea id="python-code"')
         self.assertIn(result['execution_id'], result['html'])
+
+    def test_matlab_download_preserves_submitted_source_and_headers(self):
+        source = '% Signal π\r\n\r\n  x = [1,\t2];  \n% trailing spaces  \r\n'
+        result = self.post({'matlab_code': source}).json()
+        url = reverse('core:download_matlab', args=[result['execution_id']])
+        self.assertEqual(resolve(url).view_name, 'core:download_matlab')
+        self.assertEqual(result['matlab_download_url'], url)
+        self.assertNotIn('matlab_code', result)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/x-matlab; charset=utf-8')
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="generated.m"')
+        self.assertEqual(response['Cache-Control'], 'private, no-store')
+        self.assertEqual(self.content(response), source.encode('utf-8'))
+        self.translate.assert_called_once_with(source)
+        metadata = artifacts.load_result(result['execution_id'], self.client.session['plottwist_owner'])
+        self.assertEqual(metadata['matlab_code'], source)
+        self.assertEqual(self.client.get(reverse('core:home')).context['matlab_code'], source)
+        self.execute.assert_called_once()
+
+    def test_matlab_download_is_private_and_expires_with_its_artifact(self):
+        from uuid import uuid4
+        result = self.post().json()
+        url = result['matlab_download_url']
+        other = Client()
+        self.assertEqual(other.get(url).status_code, 404)
+        other.get(reverse('core:home'))
+        self.assertEqual(other.get(url).status_code, 404)
+        self.assertEqual(self.client.get(reverse('core:download_matlab', args=[uuid4()])).status_code, 404)
+        with patch('core.artifacts.time.time', return_value=time.time() + 901):
+            self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(list(Path(self.temporary.name).iterdir()), [])
+        self.assertEqual(self.client.get(reverse('core:home')).status_code, 200)
+        self.assertNotIn('plottwist_last_run', self.client.session)
+
+    def test_matlab_and_python_downloads_remain_attached_to_their_own_run(self):
+        first = self.post({'matlab_code': '  x = 1;  \r\n'}).json()
+        self.translate.return_value['python_code'] = 'print("second run")\n'
+        second = self.post({'matlab_code': '% second\nx = 2;\n'}).json()
+        self.assertNotEqual(first['execution_id'], second['execution_id'])
+        for result, source in ((first, '  x = 1;  \r\n'), (second, '% second\nx = 2;\n')):
+            self.assertEqual(self.content(self.client.get(result['matlab_download_url'])), source.encode())
+            python = self.client.get(reverse('core:download_python', args=[result['execution_id']]))
+            self.assertEqual(self.content(python), result['python_code'].encode())
+
+    def test_source_downloads_survive_execution_failure_without_figures(self):
+        self.execute.return_value.update(success=False, figures=[], error='ValueError: DSP failed')
+        result = self.post({'matlab_code': 'invalid_dsp(x);\r\n'}).json()
+        self.assertEqual(result['stage'], 'execution')
+        self.assertEqual(self.content(self.client.get(result['matlab_download_url'])), b'invalid_dsp(x);\r\n')
+        python = self.client.get(reverse('core:download_python', args=[result['execution_id']]))
+        self.assertEqual(self.content(python), result['python_code'].encode())
+
+    def test_figure_checkboxes_default_to_the_entire_stored_collection(self):
+        result = self.post().json()
+        for index in range(len(self.figures)):
+            self.assertIn(f'type="checkbox" name="indices" value="{index}" checked', result['html'])
+        self.assertIn('name="selection" value="1"', result['html'])
+        self.assertIn('Select all', result['html'])
+        self.assertIn('Clear selection', result['html'])
+        self.execute.return_value['figures'] = self.figures[:1]
+        replacement = self.post().json()
+        self.assertIn('type="checkbox" name="indices" value="0" checked', replacement['html'])
+        self.assertNotIn('id="figure-select-1"', replacement['html'])
 
     def test_translation_failure_prevents_execution(self):
         self.translate.return_value.update(success=False, python_code='', error='Translation is unavailable.')
@@ -793,6 +873,100 @@ class WorkflowTests(TestCase):
             else:
                 self.assertEqual(len(Document(io.BytesIO(data)).inline_shapes), 2)
 
+    def test_selected_subsets_preserve_original_order_in_combined_documents(self):
+        for size in ((90, 30), (50, 100), (60, 60)):
+            output = io.BytesIO()
+            with Image.new('RGB', size, 'white') as image:
+                image.save(output, format='PNG')
+            self.figures.append({'name': 'figure.png', 'content_type': 'image/png', 'data': output.getvalue()})
+        result = self.post().json()
+        metadata = artifacts.load_result(result['execution_id'], self.client.session['plottwist_owner'])
+        directory = Path(self.temporary.name) / result['execution_id'].replace('-', '')
+        original_files = {path.name: path.read_bytes() for path in directory.iterdir()}
+        for format in ('pdf', 'docx'):
+            for submitted, expected in ((['4', '0', '2'], [0, 2, 4]), (['3'], [3])):
+                with self.subTest(format=format, indices=submitted):
+                    response = self.client.get(
+                        reverse('core:download_figures', args=[result['execution_id'], format]),
+                        {'selection': '1', 'indices': submitted},
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    data = self.content(response)
+                    if format == 'pdf':
+                        pages = PdfReader(io.BytesIO(data), strict=True).pages
+                        sizes = []
+                        for page in pages:
+                            drawn = [args[0] for args, op in page.get_contents().operations if op == b'Do']
+                            self.assertEqual(len(drawn), 1)
+                            image = page['/Resources']['/XObject'][drawn[0]].get_object()
+                            sizes.append((image['/Width'], image['/Height']))
+                        expected_sizes = [Image.open(io.BytesIO(self.figures[i]['data'])).size for i in expected]
+                        self.assertEqual(sizes, expected_sizes)
+                    else:
+                        document = Document(io.BytesIO(data))
+                        images = [document.part.related_parts[shape._inline.xpath('.//a:blip/@r:embed')[0]].blob
+                                  for shape in document.inline_shapes]
+                        self.assertEqual(images, [self.figures[i]['data'] for i in expected])
+        self.assertEqual(artifacts.load_result(result['execution_id'], self.client.session['plottwist_owner']), metadata)
+        self.assertEqual({path.name: path.read_bytes() for path in directory.iterdir()}, original_files)
+        for index, figure in enumerate(self.figures):
+            response = self.client.get(reverse('core:download_figure', args=[result['execution_id'], index, 'png']))
+            self.assertEqual(self.content(response), figure['data'])
+        self.translate.assert_called_once()
+        self.execute.assert_called_once()
+
+    def test_explicit_full_selection_exports_all_figures(self):
+        result = self.post().json()
+        for format in ('pdf', 'docx'):
+            response = self.client.get(
+                reverse('core:download_figures', args=[result['execution_id'], format]),
+                {'selection': '1', 'indices': ['1', '0']},
+            )
+            self.assertEqual(response.status_code, 200)
+            data = self.content(response)
+            if format == 'pdf':
+                self.assertEqual(len(PdfReader(io.BytesIO(data)).pages), 2)
+            else:
+                self.assertEqual(len(Document(io.BytesIO(data)).inline_shapes), 2)
+
+    def test_invalid_combined_selections_are_rejected_before_reading_figures(self):
+        result = self.post().json()
+        selections = ([], [''], ['0', '0'], ['bad'], ['0,1'], ['[0,1]'], ['0.5'],
+                      ['-1'], ['2'], ['99'], [' 0'], ['+1'], ['1e0'], ['٠'], ['00'], ['9' * 5000])
+        with patch('core.views.artifacts.read_figure') as read:
+            for format in ('pdf', 'docx'):
+                url = reverse('core:download_figures', args=[result['execution_id'], format])
+                for indices in selections:
+                    with self.subTest(format=format, indices=indices):
+                        response = self.client.get(url, {'selection': '1', 'indices': indices})
+                        self.assertEqual(response.status_code, 400)
+                        if not indices:
+                            self.assertIn('at least one figure', response.json()['error'])
+                self.assertEqual(self.client.get(url, {'indices': ''}).status_code, 400)
+            read.assert_not_called()
+        self.translate.assert_called_once()
+        self.execute.assert_called_once()
+
+    def test_selected_combined_exports_enforce_ownership_before_selection_validation(self):
+        result = self.post().json()
+        other = Client()
+        other.get(reverse('core:home'))
+        for format in ('pdf', 'docx'):
+            url = reverse('core:download_figures', args=[result['execution_id'], format])
+            for indices in (['1'], ['bad'], []):
+                self.assertEqual(other.get(url, {'selection': '1', 'indices': indices}).status_code, 404)
+
+    def test_expired_selected_combined_exports_remove_the_whole_run(self):
+        for format in ('pdf', 'docx'):
+            result = self.post().json()
+            with patch('core.artifacts.time.time', return_value=time.time() + 901):
+                response = self.client.get(
+                    reverse('core:download_figures', args=[result['execution_id'], format]),
+                    {'selection': '1', 'indices': ['0']},
+                )
+                self.assertEqual(response.status_code, 404)
+            self.assertEqual(list(Path(self.temporary.name).iterdir()), [])
+
     def test_figures_and_exports_are_session_private(self):
         result = self.post().json()
         other = Client()
@@ -800,6 +974,7 @@ class WorkflowTests(TestCase):
         urls = [
             reverse('core:figure', args=[result['execution_id'], 0]),
             reverse('core:download_python', args=[result['execution_id']]),
+            reverse('core:download_matlab', args=[result['execution_id']]),
             reverse('core:download_figure', args=[result['execution_id'], 0, 'png']),
             reverse('core:download_figures', args=[result['execution_id'], 'pdf']),
         ]

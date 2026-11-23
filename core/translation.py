@@ -46,6 +46,9 @@ ambiguities in warnings. If an essential operation cannot be translated
 faithfully, return an empty python_code and warnings explaining why. Never
 replace unsupported behavior with plausible-looking results or placeholder code.
 Do not run code, perform file/network/system operations, or export figures.
+generate code that works on the following software versions "python>=3.13", "matplotlib>=3.11.2","numpy>=2.5.5","scipy>=1.18.1"
+never generate deprecated python,matplotlib, numpy or scipy code as per the already stated versions.
+generated code should produce individually spaced plots or figures. favor flags like constrained_layout=True
 """
 
 TRANSLATION_SCHEMA = {

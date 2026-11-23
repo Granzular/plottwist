@@ -1,4 +1,4 @@
-"""In-memory downloads from PNG artifacts and Python text; never execute code."""
+"""In-memory downloads from PNG artifacts and source text; never execute code."""
 
 from collections.abc import Mapping
 from io import BytesIO
@@ -144,14 +144,23 @@ def export_figures(figures, format='pdf') -> dict:
     return {'name': f'charts.{format}', 'content_type': _CONTENT_TYPES[format], 'data': data}
 
 
-def export_python(source: str) -> dict:
-    """Export source verbatim as UTF-8 generated.py; no parsing or execution."""
+def _export_source(source, language, name, content_type):
     if not isinstance(source, str):
-        raise TypeError('Python source must be a string.')
+        raise TypeError(f'{language} source must be a string.')
     if not source.strip():
-        raise ValueError('Python source is empty.')
+        raise ValueError(f'{language} source is empty.')
     try:
         data = source.encode('utf-8')
     except UnicodeEncodeError as exc:
-        raise ValueError('Python source must be valid UTF-8 text.') from exc
-    return {'name': 'generated.py', 'content_type': 'text/x-python; charset=utf-8', 'data': data}
+        raise ValueError(f'{language} source must be valid UTF-8 text.') from exc
+    return {'name': name, 'content_type': content_type, 'data': data}
+
+
+def export_python(source: str) -> dict:
+    """Export source verbatim as UTF-8 generated.py; no parsing or execution."""
+    return _export_source(source, 'Python', 'generated.py', 'text/x-python; charset=utf-8')
+
+
+def export_matlab(source: str) -> dict:
+    """Export submitted source verbatim as UTF-8 generated.m."""
+    return _export_source(source, 'MATLAB', 'generated.m', 'text/x-matlab; charset=utf-8')

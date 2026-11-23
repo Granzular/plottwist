@@ -144,3 +144,28 @@ def figure_path(metadata, index):
 
 def read_figure(metadata, index):
     return {**metadata['figures'][index], 'data': figure_path(metadata, index).read_bytes()}
+
+
+def selected_figure_indices(metadata, values=None):
+    """Validate query values against stored figures and return their original order.
+
+    Omitted selections retain the existing full-collection download behavior.
+    An explicitly supplied selection must contain at least one unique index.
+    """
+    count = len(metadata['figures'])
+    if values is None:
+        values = [str(index) for index in range(count)]
+    if not values:
+        raise ValueError('Select at least one figure for a combined export.')
+    if len(values) > count:
+        raise ValueError('The figure selection is invalid.')
+    indices = []
+    for value in values:
+        if (not isinstance(value, str) or len(value) > len(str(count - 1))
+                or not re.fullmatch(r'0|[1-9][0-9]*', value)):
+            raise ValueError('The figure selection is invalid.')
+        index = int(value)
+        if index >= count or index in indices:
+            raise ValueError('The figure selection is invalid.')
+        indices.append(index)
+    return sorted(indices)

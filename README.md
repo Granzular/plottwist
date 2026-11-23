@@ -194,11 +194,12 @@ requires separately considered operating-system isolation and resource controls.
 `core.exports` accepts supplied data and never calls translation or execution:
 
 ```python
-from core.exports import export_figure, export_figures, export_python
+from core.exports import export_figure, export_figures, export_matlab, export_python
 
 chart = export_figure(figures, index=0, format='png')
 combined = export_figures(figures, format='pdf')
 python_file = export_python(python_source)
+matlab_file = export_matlab(matlab_source)
 ```
 
 - `export_figure(figures, index=0, format='png')`: individual PNG, PDF, or DOCX.
@@ -207,6 +208,8 @@ python_file = export_python(python_source)
   page in input order. Pass a nonempty ordered list or tuple of PNG artifacts.
 - `export_python(source)`: UTF-8 `generated.py`, preserving source exactly,
   including whitespace and line endings. This function does not validate syntax.
+- `export_matlab(source)`: UTF-8 `generated.m`, preserving the submitted MATLAB
+  text exactly, with `text/x-matlab; charset=utf-8`. No parsing or formatting occurs.
 
 Every export returns `name`, `content_type`, and `data` (immutable file bytes),
 matching the execution artifact shape. Individual filenames are
@@ -223,7 +226,7 @@ and explicit page breaks between charts. Inline baseline space is reserved to
 avoid an extra page for tall images.
 
 Missing figures, malformed/corrupt/non-PNG image data, images over 4 million
-pixels, empty Python source, and unsupported formats raise `ValueError`.
+pixels, empty source text, and unsupported formats raise `ValueError`.
 Invalid integer indices raise `IndexError`; incorrect argument types raise
 `TypeError`. A bad chart later in a collection raises rather than returning a
 partial combined document. CSV and other formats are not implemented.
@@ -238,10 +241,17 @@ for structural PDF tests and is not required by the export service. The standard
 The homepage form posts `matlab_code` to the named `core:run` route at `/run/`.
 The endpoint accepts form-encoded/multipart or JSON requests, preserves CSRF,
 rejects empty source, and limits MATLAB input to 64 KiB of UTF-8. Requests are
-limited to 128 KiB including their envelope. JavaScript submits the form with
-`Accept: application/json`, disables repeat clicks while pending, and replaces
-the results with an autoescaped Django template. A normal form POST also renders
-the workspace without JavaScript.
+limited to 128 KiB including their envelope. JavaScript submits JSON with
+`Accept: application/json` and the form's CSRF token, preserving the textarea's
+line endings. It disables repeat clicks while pending and replaces the results
+with an autoescaped Django template. A normal form POST also renders the
+workspace without JavaScript.
+
+The compact toolbar contains Run and Clear source. Desktop code panels sit
+side by side above the figure workspace and command window; mobile stacks
+MATLAB, generated Python, figures, then output. The existing fonts, typography,
+and colour palette are retained. Python remains read-only. Clearing the editor
+does not change the submitted source associated with the displayed results.
 
 Responses distinguish `validation`, `translation`, `execution`, `storage`, and
 `complete` stages. They include generated Python, translation warnings, public
@@ -257,8 +267,9 @@ translation failures, 422 for execution failures, 504 for stage timeouts, and
 error rather than provider details or internal paths.
 
 Private artifacts are stored beneath `.cache/executions/<random-UUID>/`, never
-served as public media/static. PNGs are written once and metadata contains Python,
-warnings, public output, creation time, and an owner-token hash. Django's existing
+served as public media/static. PNGs are written once and metadata contains the
+original MATLAB text, Python, warnings, public output, creation time, and an
+owner-token hash. Django's existing
 session stores only an opaque owner token and last execution ID, with no plots,
 generated code, or new database models. Files survive separate requests/processes
 and server restarts within their lifetime. Atomic directory renaming prevents
@@ -266,8 +277,9 @@ partially written runs from becoming visible. Exclusive owner-specific lock
 files reject concurrent runs from the same established browser session.
 
 Every image/download read checks the session owner and fixed creation-time
-expiration. Unknown, expired, unauthorized results and invalid figure indices
-return 404. Knowing another execution's UUID is insufficient for access. Expired
+expiration. Unknown, expired, unauthorized results and invalid individual figure
+indices return 404. Invalid combined selections return 400 after ownership is
+checked. Knowing another execution's UUID is insufficient for access. Expired
 results are deleted on access, and new runs clean expired directories and stale
 locks. To remove expired artifacts while the application is idle, run or schedule:
 
@@ -285,13 +297,32 @@ Named download/image routes:
 |---|---|
 | `core:figure` | Displays the selected PNG, with private/no-store caching. |
 | `core:download_figure` | Individual PNG/PDF/DOCX by execution ID and zero-based index. |
-| `core:download_figures` | Combined PDF/DOCX in stored figure order. |
+| `core:download_figures` | Combined PDF/DOCX for validated selected indices, in stored figure order. |
 | `core:download_python` | Unmodified generated source as `generated.py`, including after execution failure. |
+| `core:download_matlab` | Exact MATLAB source submitted for that stored run as `generated.m`, including after execution failure. |
 
 Downloads use `Content-Disposition: attachment`, the export service's MIME types,
 and deterministic filenames. Exporting does not translate or execute the source
-again. Individual downloads load only the selected image; combined documents
-load the stored collection on demand.
+again. Individual downloads load only the requested image; combined documents
+load only the selected stored PNGs. Source downloads share the run's session
+ownership, expiration, and cleanup. Subsequent editor changes or runs do not
+change an existing run's source. Translation failures do not create execution
+artifacts; storage failures cannot offer downloads.
+
+Every figure is checked by default when new results arrive. Select all and Clear
+selection update the selected count; an empty selection disables combined
+downloads and displays an explanation. Individual previews/downloads remain
+available. New runs replace the selection with all of their own figures.
+
+Combined download forms send repeated zero-based `indices` query parameters,
+for example `?selection=1&indices=0&indices=2&indices=4`. The `selection` marker
+distinguishes an explicitly empty selection from older links that omit selection
+parameters and export the full collection. Empty selections, duplicates,
+noncanonical integers, negative values, and out-of-range indices return 400.
+Valid indices are sorted against the stored collection before exporting;
+arriving as `4, 0, 2` still exports original figures 1, 3, and 5. Without JavaScript,
+the checkboxes and native download forms still submit the chosen subset, while
+bulk selection controls and the live count are hidden.
 
 ## Frontend development
 
@@ -313,9 +344,32 @@ On other platforms, use the matching standalone binary from the same [Tailwind r
 uv run python manage.py check
 uv run python manage.py test
 uv run python manage.py findstatic css/app.css
+uv run python manage.py makemigrations --check --dry-run
+uv run python manage.py migrate --check
+uv lock --check
+git diff --check
 ```
 
-The named homepage route is `core:home` at `/`. Tests cover service behavior and workflow/download integration, including private ownership, expiration, input validation, CSRF, duplicate requests, stage-specific errors, and template rendering. Translation is mocked without Groq API requests; execution service tests use actual subprocesses. Export tests inspect real PDF/DOCX documents. Browser verification checks loading/duplicate clicks, read-only Python, multiple plots, downloads, and responsive layout. Read [AGENTS.md](AGENTS.md) for project development rules.
+The named homepage route is `core:home` at `/`. Tests cover service behavior and workflow/download integration, including exact MATLAB/Python source downloads, selected exports and original order, private ownership, expiration, input validation, CSRF, duplicate requests, stage-specific errors, and template rendering. Translation is mocked without Groq API requests; execution service tests use actual subprocesses. Export tests inspect real PDF/DOCX documents. Read [AGENTS.md](AGENTS.md) for project development rules.
+
+`core.test_browser` uses Django's live test server, an installed Chromium browser
+(Edge, Chrome, or Chromium), and Node.js 22+ with native DevTools/WebSocket calls;
+no browser package is installed. It mocks translation and exercises real Python
+subprocesses, selection defaults and changes, disabled empty exports, native
+subset downloads, source preservation, result replacement, failure states,
+keyboard focus, fonts/colours, and layout at 1280px, 360px, and a 640px viewport
+equivalent to 200% desktop zoom. Downloaded PDF/DOCX files are opened to check
+the selected figures and order. These checks run with the full suite when the
+tools are available and explicitly skip otherwise. Run them separately with:
+
+```bash
+uv run python manage.py test core.test_browser
+```
+
+Set `PLOTTWIST_BROWSER` to an executable path if automatic detection cannot find
+the browser. Optionally set `PLOTTWIST_BROWSER_SCREENSHOTS` to a local directory
+to retain screenshots; other browser profiles, downloads, and execution
+artifacts are temporary and cleaned after the test.
 
 ## Project Status
 
