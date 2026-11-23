@@ -128,3 +128,7 @@ once; JSON metadata contains no image data. Publish only fully written runs usin
 an atomic rename. Run locks use exclusive file creation. Cleanup removes expired
 runs on access/new runs; schedule `cleanup_artifacts` when idle cleanup is needed.
 Current scope excludes authentication, accounts, saved plots, and execution history.
+
+## Documentaion
+
+project progress and relevant information should be documented in docs/ folder in project root

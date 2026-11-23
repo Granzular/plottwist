@@ -11,11 +11,12 @@ import shutil
 import subprocess
 import tempfile
 import time
+from types import SimpleNamespace
 from unittest import SkipTest
 from unittest.mock import patch
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import override_settings
+from django.test import SimpleTestCase, override_settings
 from docx import Document
 from PIL import Image
 from pypdf import PdfReader
@@ -76,6 +77,22 @@ def _translation(source):
 
 
 class WorkspaceBrowserTests(StaticLiveServerTestCase):
+    @classmethod
+    def _make_connections_override(cls):
+        overrides = super()._make_connections_override()
+        for alias, connection in list(overrides.items()):
+            name = str(connection.settings_dict['NAME'])
+            if (
+                name.startswith('file:')
+                and 'mode=memory' in name
+                and 'cache=shared' in name
+            ):
+                # The URI shares the fixture database, so request threads can
+                # use separate connections. Sharing one connection caused
+                # SQLite API errors and failed concurrent figure/session reads.
+                del overrides[alias]
+        return overrides
+
     @classmethod
     def setUpClass(cls):
         cls.node = shutil.which('node')
@@ -168,3 +185,28 @@ class WorkspaceBrowserTests(StaticLiveServerTestCase):
                 sizes.append(image.size)
         self.assertEqual(sizes, expected_sizes)
         print(result.stdout.strip())
+
+
+class BrowserConnectionTests(SimpleTestCase):
+    def test_shared_memory_uri_uses_per_thread_connections(self):
+        connection = SimpleNamespace(settings_dict={
+            'NAME': 'file:memorydb_default?mode=memory&cache=shared',
+        })
+        with patch.object(
+            StaticLiveServerTestCase, '_make_connections_override',
+            return_value={'default': connection},
+        ):
+            self.assertEqual(
+                WorkspaceBrowserTests._make_connections_override(), {},
+            )
+
+    def test_plain_memory_database_keeps_django_connection_sharing(self):
+        connection = SimpleNamespace(settings_dict={'NAME': ':memory:'})
+        with patch.object(
+            StaticLiveServerTestCase, '_make_connections_override',
+            return_value={'default': connection},
+        ):
+            self.assertEqual(
+                WorkspaceBrowserTests._make_connections_override(),
+                {'default': connection},
+            )
