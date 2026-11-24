@@ -178,10 +178,18 @@ def execute_python(source: str) -> dict:
                 if name.upper() in {'SYSTEMROOT', 'WINDIR', 'LANG', 'LC_ALL'}
             }
             environment.update({
-                'MPLBACKEND': 'Agg', 'MPLCONFIGDIR': str(directory / 'mpl-config'),
+                'MPLBACKEND': 'Agg',
                 'TEMP': temporary, 'TMP': temporary,
                 'OPENBLAS_NUM_THREADS': '1', 'OMP_NUM_THREADS': '1', 'MKL_NUM_THREADS': '1',
             })
+            # Forward only cache settings, including Fontconfig's XDG cache.
+            # Use writable per-run fallbacks without Django startup configuration.
+            for name, cache_name in (
+                ('XDG_CACHE_HOME', 'cache'), ('MPLCONFIGDIR', 'mpl-config'),
+            ):
+                cache_path = Path(os.environ.get(name) or directory / cache_name).resolve()
+                cache_path.mkdir(parents=True, exist_ok=True)
+                environment[name] = str(cache_path)
             runner = Path(__file__).with_name('_execution_runner.py').resolve()
             with subprocess.Popen(
                 [

@@ -448,6 +448,60 @@ class ExecutionTests(SimpleTestCase):
         self.assertNotIn('GROQ_API_KEY', environment)
         self.assertNotIn('DJANGO_SECRET_KEY', environment)
 
+    def test_child_cache_directories_are_writable_before_launch_and_reused(self):
+        real_popen = subprocess.Popen
+
+        def launch(*args, **kwargs):
+            for name in ('XDG_CACHE_HOME', 'MPLCONFIGDIR'):
+                with tempfile.TemporaryFile(dir=kwargs['env'][name]) as probe:
+                    probe.write(b'writable')
+            return real_popen(*args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as parent:
+            caches = {
+                'XDG_CACHE_HOME': str(Path(parent) / 'cache'),
+                'MPLCONFIGDIR': str(Path(parent) / 'mpl-config'),
+            }
+            with patch.dict('os.environ', caches), patch(
+                'core.execution.subprocess.Popen', side_effect=launch,
+            ) as popen:
+                for _ in range(2):
+                    result = self.run_source('''
+                        import matplotlib
+                        import matplotlib.pyplot as plt
+                        print(matplotlib.get_configdir())
+                        plt.plot([0, 1], [0, 1])
+                        plt.xlabel('Time (s)')
+                    ''')
+                    self.assert_success(result, 1)
+                    self.assertEqual(result['stdout'].strip(), caches['MPLCONFIGDIR'])
+                    self.assertNotIn('Fontconfig error', result['stderr'])
+                    self.assertNotIn('Matplotlib created a temporary cache', result['stderr'])
+                    environment = popen.call_args.kwargs['env']
+                    for name, path in caches.items():
+                        self.assertEqual(environment[name], path)
+            self.assertTrue(list(Path(caches['MPLCONFIGDIR']).glob('fontlist-*.json')))
+
+    def test_child_cache_defaults_work_without_startup_configuration(self):
+        real_popen = subprocess.Popen
+        with patch.dict('os.environ', {'XDG_CACHE_HOME': '', 'MPLCONFIGDIR': ''}), patch(
+            'core.execution.subprocess.Popen', wraps=real_popen,
+        ) as popen:
+            result = self.run_source('''
+                import matplotlib
+                import matplotlib.pyplot as plt
+                print(matplotlib.get_configdir())
+                plt.plot([0, 1], [0, 1])
+            ''')
+        self.assert_success(result, 1)
+        self.assertNotIn('Fontconfig error', result['stderr'])
+        environment = popen.call_args.kwargs['env']
+        working_directory = Path(popen.call_args.kwargs['cwd'])
+        self.assertEqual(result['stdout'].strip(), environment['MPLCONFIGDIR'])
+        for name in ('XDG_CACHE_HOME', 'MPLCONFIGDIR'):
+            self.assertEqual(Path(environment[name]).parent, working_directory)
+        self.assertFalse(working_directory.exists())
+
     def test_artifact_bytes_survive_temporary_directory_cleanup(self):
         real_temporary = tempfile.TemporaryDirectory
         with tempfile.TemporaryDirectory() as parent:

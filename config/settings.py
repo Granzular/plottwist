@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 import os
 from pathlib import Path
+import tempfile
 
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
@@ -20,6 +21,18 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / '.env')
+
+# Configure caches before the execution worker or PDF downloads import Matplotlib.
+# These regenerable files use the OS temporary directory, including /tmp on Render.
+for cache_variable, cache_name in (
+    ('XDG_CACHE_HOME', 'plottwist-cache'),
+    ('MPLCONFIGDIR', 'plottwist-mplconfig'),
+):
+    cache_path = os.environ.get(cache_variable) or str(
+        Path(tempfile.gettempdir()) / cache_name
+    )
+    Path(cache_path).mkdir(parents=True, exist_ok=True)
+    os.environ[cache_variable] = cache_path
 
 
 # Quick-start development settings - unsuitable for production
