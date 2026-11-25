@@ -40,12 +40,13 @@
     }
     .site-menu-toggle {
         display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-rule);
+        min-height: 44px; padding: 8px 12px; border: 0; outline: none; box-shadow: none;
         border-radius: 4px; color: var(--color-accent); font-size: 14px; cursor: pointer;
     }
+    .site-menu-toggle:focus-visible svg { stroke-width: 2.5; }
     .site-header-compact .site-header-inner { width: calc(100% - 64px); max-width: 1536px; min-height: 56px; }
     .site-header-compact .site-wordmark { font-size: 24px; letter-spacing: -1px; }
-    .site-header a:focus-visible, .site-header button:focus-visible,
+    .site-header a:focus-visible, .site-header button:not(.site-menu-toggle):focus-visible,
     .site-footer a:focus-visible, .public-content a:focus-visible,
     .public-content summary:focus-visible, .public-content [tabindex="0"]:focus-visible,
     .tour-panel :focus-visible, .tour-invitation button:focus-visible {

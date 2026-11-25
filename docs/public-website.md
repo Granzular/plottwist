@@ -261,3 +261,16 @@ system check reported no issues during this run.
 
 The full suite, translation/execution/export tests, and broad responsive/tour
 browser scenarios were not run for this change. No CSS rebuild was needed.
+
+## Navigation menu border removal
+
+On 25 November 2026, the mobile navigation toggle was made borderless across
+default, hover, active, focus, expanded, and disabled states. Its base styles
+remove the border, outline, and box shadow, and the shared header focus outline
+excludes this toggle. Keyboard focus uses heavier SVG strokes instead of a box.
+The icon-only button also has an accessible "Toggle navigation" label.
+
+The compiled stylesheet was rebuilt with the standalone Tailwind executable.
+The existing browser focus expectation was aligned with the new icon treatment.
+No test suite or browser checks were run, as requested; the change was reviewed
+in the source and compiled stylesheet.

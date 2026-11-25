@@ -352,7 +352,10 @@ class PublicWebsiteBrowserTests(StaticLiveServerTestCase):
                         self.assertFalse(self.devtools.evaluate('document.querySelector("#site-links").hidden'))
                         self.assertEqual(self.devtools.evaluate(
                             'getComputedStyle(document.activeElement).outlineWidth'
-                        ), '2px')
+                        ), '0px')
+                        self.assertEqual(self.devtools.evaluate(
+                            'getComputedStyle(document.activeElement.querySelector("svg")).strokeWidth'
+                        ), '2.5px')
                         self._key('Escape', 'Escape', 27)
                         self.assertEqual(self.devtools.evaluate('document.activeElement.id'), 'site-menu-toggle')
                         self.assertTrue(self.devtools.evaluate('document.querySelector("#site-links").hidden'))
