@@ -7,6 +7,7 @@
 {% block public_content %}
 <div class="site-container">
     <section class="landing-hero" aria-labelledby="hero-heading">
+        <canvas id="hero-animation" class="hero-animation" aria-hidden="true"></canvas>
         <div class="hero-copy">
             <p class="eyebrow">Scientific computing, made practical</p>
             <h1 id="hero-heading">MATLAB to Python.<br><span>Code to plots.</span></h1>
@@ -118,4 +119,8 @@
         <a class="site-button" href="{% url 'core:home' %}">Open Workspace <span aria-hidden="true">→</span></a>
     </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/hero-animation.js' %}" defer></script>
 {% endblock %}
