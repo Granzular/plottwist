@@ -213,7 +213,7 @@ browser scenario was not invoked; the new browser coverage requires no Node.js.
 
 - `.gitignore`, `README.md`, `docs/public-website.md`.
 - `core/urls.py`, `core/views.py`, `core/test_public.py`, `core/test_public_browser.py`.
-- `templates/base.html`, `templates/core/home.html`.
+- `templates/base.html`, `templates/core/workspace.html`.
 - `templates/core/includes/navigation.html`, `footer.html`, `tour.html`.
 - `templates/core/public/base.html`, `document.html`, `home.html`, `about.html`,
   `contact.html`, `guide.html`, `privacy.html`, `terms.html`.
@@ -274,3 +274,12 @@ The compiled stylesheet was rebuilt with the standalone Tailwind executable.
 The existing browser focus expectation was aligned with the new icon treatment.
 No test suite or browser checks were run, as requested; the change was reviewed
 in the source and compiled stylesheet.
+
+## Workspace template rename
+
+On 25 November 2026, the workspace template was renamed from `home.html` to
+`workspace.html`. Both the workspace GET view and full-page Run responses render
+`core/workspace.html`; the existing template assertions were updated accordingly.
+The template contents and `/workspace/` route are unchanged. No CSS rebuild was
+needed, and no test suite was run, as requested. Reference searches and the diff
+were reviewed.

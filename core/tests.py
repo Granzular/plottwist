@@ -41,7 +41,7 @@ class HomepageTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'core/home.html')
+        self.assertTemplateUsed(response, 'core/workspace.html')
         self.assertContains(response, 'plottwist')
         self.assertContains(response, 'MATLAB to Python. Code to plots.')
         self.assertContains(response, 'MATLAB source')

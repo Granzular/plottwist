@@ -64,7 +64,7 @@ def _result_response(request, result, source=''):
         html = render_to_string('core/results.html', {'result': public}, request=request)
         response = JsonResponse({**public, 'html': html}, status=status)
     else:
-        response = render(request, 'core/home.html', {
+        response = render(request, 'core/workspace.html', {
             'result': public, 'matlab_code': source, 'max_source_bytes': workflow.MAX_SOURCE_BYTES,
         }, status=status)
     response['Cache-Control'] = 'private, no-store'
@@ -83,7 +83,7 @@ def home(request):
             source = result['matlab_code']
         except (OSError, ValueError):
             request.session.pop('plottwist_last_run', None)
-    response = render(request, 'core/home.html', {
+    response = render(request, 'core/workspace.html', {
         'result': _presentation(result), 'matlab_code': source,
         'max_source_bytes': workflow.MAX_SOURCE_BYTES,
     })

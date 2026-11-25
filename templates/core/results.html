@@ -47,7 +47,7 @@
                     <span class="hidden font-mono text-xs text-accent group-has-checked:inline">Selected</span>
                     <span class="font-mono text-xs text-muted group-has-checked:hidden">Not selected</span>
                 </figcaption>
-                <img src="{{ figure.url }}" alt="Figure {{ forloop.counter }} from the MATLAB source" class="mx-auto block h-auto max-h-[32rem] w-auto max-w-full" loading="lazy">
+                <img src="{{ figure.url }}" alt="Figure {{ forloop.counter }} from the MATLAB source" class="mx-auto block h-auto max-h-[32rem] w-auto max-w-full" loading="eager">
                 <div class="flex flex-wrap gap-x-4 border-t border-rule px-4 py-1 text-sm text-accent" role="group" aria-label="Figure {{ forloop.counter }} downloads">
                     <a href="{% url 'core:download_figure' result.execution_id figure.index 'png' %}" aria-label="Download Figure {{ forloop.counter }} as PNG" class="download-link inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">PNG</a>
                     <a href="{% url 'core:download_figure' result.execution_id figure.index 'pdf' %}" aria-label="Download Figure {{ forloop.counter }} as PDF" class="download-link inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">PDF</a>

@@ -179,7 +179,7 @@ class WorkspaceTourTemplateTests(TestCase):
         html = response.content.decode()
         markup = PageMarkup(html)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'core/home.html')
+        self.assertTemplateUsed(response, 'core/workspace.html')
         self.assertTemplateUsed(response, 'core/includes/tour.html')
         for element in ('run-form', 'matlab-code', 'run-button', 'python-panel',
                         'figure-workspace', 'command-panel', 'workspace-tour', 'tour-invitation'):
