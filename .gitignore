@@ -229,7 +229,3 @@ __marimo__/
 staticfiles/
 media/
 !static/media/
-static/media/*
-!static/media/screenshot-1.PNG
-!static/media/screenshot-2.PNG
-!static/media/screenshot-3.PNG
