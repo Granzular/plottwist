@@ -4,7 +4,7 @@
 
 plottwist is a web-based MATLAB-to-Python transpilation and visualization tool designed for Digital Signal Processing (DSP) coursework and experimentation.
 
-The homepage connects independent translation, Python execution, and export services through one Run action. Enter MATLAB source to view generated Python, ordered plots, output, translation warnings, and useful execution errors. Generated code remains available when execution fails.
+The workspace connects independent translation, Python execution, and export services through one Run action. Enter MATLAB source to view generated Python, ordered plots, output, translation warnings, and useful execution errors. Generated code remains available when execution fails.
 
 ## Overview
 
@@ -30,10 +30,12 @@ Implemented foundation:
 - Child-process Python execution using NumPy, Matplotlib, and SciPy, with separate PNG artifacts and actual subprocess tests.
 - Exports of individual charts as PNG/PDF/DOCX, combined charts as PDF/DOCX, and Python source as `.py`.
 - Integrated Run form with loading feedback, temporary private results, and downloads.
+- Original MATLAB source downloads, checked figure selection, and combined exports of the selected figures.
+- Public website, user guide, About, Contact, Privacy Policy, and Terms of Use.
+- Optional workspace tour with backward/forward navigation, dismissal, and replay.
 
 Planned functionality:
 
-- Read-only display of translated Python code.
 - CSV export for supported numerical data.
 - Optional user accounts for saving generated plots.
 
@@ -48,7 +50,7 @@ Planned functionality:
 | Numerical computing | NumPy |
 | Plotting | Matplotlib |
 | Scientific computing | SciPy |
-| Database | SQLite |
+| Database | SQLite or configured PostgreSQL |
 | Dependency management | uv |
 
 ## Getting Started
@@ -101,7 +103,16 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000/` in your browser.
+Open `http://127.0.0.1:8000/` for the public website,
+`http://127.0.0.1:8000/workspace/` for the workspace, or
+`http://127.0.0.1:8000/guide/` for the user guide. The former `/home/` route
+has been removed.
+
+The public navigation links to the workspace and informational pages. New visitors
+can start or dismiss a small tour invitation in the workspace; use **Workspace
+tour** to replay it. Completion/dismissal is remembered in browser local storage,
+without storing source or results. Read [docs/public-website.md](docs/public-website.md)
+for route, content, data-handling, and verification details.
 
 ## Configuration
 
@@ -254,7 +265,7 @@ for structural PDF tests and is not required by the export service. The standard
 
 ## Integrated workspace and downloads
 
-The homepage form posts `matlab_code` to the named `core:run` route at `/run/`.
+The workspace form posts `matlab_code` to the named `core:run` route at `/run/`.
 The endpoint accepts form-encoded/multipart or JSON requests, preserves CSRF,
 rejects empty source, and limits MATLAB input to 64 KiB of UTF-8. Requests are
 limited to 128 KiB including their envelope. JavaScript submits JSON with
@@ -263,7 +274,7 @@ line endings. It disables repeat clicks while pending and replaces the results
 with an autoescaped Django template. A normal form POST also renders the
 workspace without JavaScript.
 
-The compact toolbar contains Run and Clear source. Desktop code panels sit
+The compact toolbar contains Run, Clear source, and the optional Workspace tour. Desktop code panels sit
 side by side above the figure workspace and command window; mobile stacks
 MATLAB, generated Python, figures, then output. The existing fonts, typography,
 and colour palette are retained. Python remains read-only. Clearing the editor
@@ -373,7 +384,28 @@ uv lock --check
 git diff --check
 ```
 
-The named homepage route is `core:home` at `/`. Tests cover service behavior and workflow/download integration, including exact MATLAB/Python source downloads, selected exports and original order, private ownership, expiration, input validation, CSRF, duplicate requests, stage-specific errors, and template rendering. Translation is mocked without Groq API requests; execution service tests use actual subprocesses. Export tests inspect real PDF/DOCX documents. Read [AGENTS.md](AGENTS.md) for project development rules.
+The named workspace route is `core:home` at `/workspace/`; the public homepage is
+`core:public_home` at `/`. Tests cover service behavior and workflow/download integration, including
+exact MATLAB/Python source downloads, selected exports and original order, private
+ownership, expiration, input validation, CSRF, duplicate requests, stage-specific
+errors, and template rendering. Public tests also check shared navigation, screenshot
+paths, guide anchors, configured retention text, and optional tour markup. Translation
+is mocked without Groq API requests; execution service tests use actual subprocesses.
+Export tests inspect real PDF/DOCX documents. Read [AGENTS.md](AGENTS.md) for project
+development rules.
+
+The public-page and tour browser checks use an installed Chromium browser and
+Python's standard library, with no Node.js or browser package requirement:
+
+```bash
+uv run python manage.py test core.test_public core.test_public_browser
+```
+
+They cover desktop/tablet/mobile/zoom layouts, mobile navigation, keyboard focus,
+tour persistence and replay, live result replacement, selected PDF/DOCX downloads,
+blocked local storage, reduced motion, and native Run without JavaScript.
+Set `PLOTTWIST_PUBLIC_SCREENSHOTS` to a local directory to retain review screenshots.
+Browser checks explicitly skip if no supported browser is installed.
 
 `core.test_browser` uses Django's live test server, an installed Chromium browser
 (Edge, Chrome, or Chromium), and Node.js 22+ with native DevTools/WebSocket calls;

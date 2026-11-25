@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block skip_target %}main-content{% endblock %}
+{% block skip_label %}Skip to content{% endblock %}
+
+{% block content %}
+{% include 'core/includes/navigation.html' %}
+<main id="main-content" class="public-content" tabindex="-1">
+    {% block public_content %}{% endblock %}
+</main>
+{% include 'core/includes/footer.html' %}
+{% endblock %}

@@ -2,12 +2,13 @@ from io import BytesIO
 import json
 import secrets
 
+from django.conf import settings
 from django.http import FileResponse, Http404, JsonResponse
 from django.http.multipartparser import MultiPartParserError
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from . import artifacts, exports, workflow
 
@@ -17,6 +18,24 @@ _STATUS_CODES = {
     'unsupported_content': 415, 'translation_failed': 502, 'execution_failed': 422,
     'timeout': 504, 'busy': 409, 'storage': 503,
 }
+
+
+@require_safe
+def user_guide(request):
+    return render(request, 'core/public/guide.html', {
+        'artifact_ttl_seconds': settings.ARTIFACT_TTL_SECONDS,
+        'execution_timeout_seconds': settings.EXECUTION_TIMEOUT_SECONDS,
+    })
+
+
+@require_safe
+def privacy_policy(request):
+    return render(request, 'core/public/privacy.html', {
+        'artifact_ttl_seconds': settings.ARTIFACT_TTL_SECONDS,
+        'session_cookie_name': settings.SESSION_COOKIE_NAME,
+        'csrf_cookie_name': settings.CSRF_COOKIE_NAME,
+        'session_cookie_age_seconds': settings.SESSION_COOKIE_AGE,
+    })
 
 
 def _owner(request):

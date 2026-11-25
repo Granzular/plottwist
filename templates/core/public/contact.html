@@ -1,0 +1,30 @@
+{% extends 'core/public/document.html' %}
+
+{% block title %}Contact — plottwist{% endblock %}
+{% block description %}Report plottwist bugs, translation problems, execution failures, or documentation errors by email or through GitHub.{% endblock %}
+{% block eyebrow %}Contact{% endblock %}
+{% block page_heading %}Help make the next practical clearer.{% endblock %}
+{% block page_lede %}Report a problem, point out a documentation error, or share feedback about using plottwist.{% endblock %}
+
+{% block document_content %}
+<div class="contact-routes">
+    <div><h2>Email</h2><a class="text-link" href="mailto:ayenimichael92@gmail.com">ayenimichael92@gmail.com <span aria-hidden="true">↗</span></a><p>For bug reports, questions, and general feedback.</p></div>
+    <div><h2>GitHub</h2><a class="text-link" href="https://github.com/Granzular">github.com/Granzular <span aria-hidden="true">↗</span></a><p>Visit the project maintainer’s profile to find the relevant repository and its available reporting options.</p></div>
+</div>
+<section>
+    <h2>What to include in a report</h2>
+    <ul>
+        <li><strong>Bugs:</strong> the steps you took, what you expected, and what happened. Include your browser and device if the interface is involved.</li>
+        <li><strong>Translation problems:</strong> a small MATLAB example, the generated Python, and any translation warnings. Describe the expected mathematical behavior.</li>
+        <li><strong>Execution failures:</strong> the MATLAB source, generated Python, and the error shown in the command window.</li>
+        <li><strong>Documentation errors:</strong> the page or guide section and the correction you suggest.</li>
+        <li><strong>General feedback:</strong> the practical or task you were working on and what would make the workflow clearer.</li>
+    </ul>
+    <p>Remove credentials, personal information, and code you do not have permission to share before sending a report. Download your source while the result is still available.</p>
+</section>
+<section>
+    <h2>Something went wrong during a run?</h2>
+    <p>The guide explains how to distinguish translation failures from execution failures and resolve common problems.</p>
+    <a class="text-link" href="{% url 'core:user_guide' %}#troubleshooting">Open troubleshooting <span aria-hidden="true">→</span></a>
+</section>
+{% endblock %}

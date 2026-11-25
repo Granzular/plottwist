@@ -1,0 +1,22 @@
+<div id="tour-invitation" class="tour-invitation" hidden>
+    <p><strong>New to plottwist?</strong> Take a quick tour of the workspace.</p>
+    <div>
+        <button type="button" data-tour-start class="text-link">Start tour <span aria-hidden="true">→</span></button>
+        <button type="button" data-tour-dismiss class="tour-dismiss">Dismiss</button>
+    </div>
+</div>
+<aside id="workspace-tour" class="tour-panel" role="dialog" aria-modal="false" aria-labelledby="tour-title" aria-describedby="tour-text" hidden>
+    <button type="button" data-tour-dismiss class="tour-close" aria-label="Dismiss workspace tour">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 4 10 10M14 4 4 14"/></svg>
+    </button>
+    <div aria-live="polite" aria-atomic="true">
+        <p id="tour-progress" class="eyebrow"></p>
+        <h2 id="tour-title" tabindex="-1"></h2>
+        <p id="tour-text"></p>
+    </div>
+    <div class="tour-controls">
+        <button id="tour-back" type="button" class="tour-secondary">Back</button>
+        <a class="text-link" href="{% url 'core:user_guide' %}">User Guide</a>
+        <button id="tour-next" type="button" class="site-button">Next <span aria-hidden="true">→</span></button>
+    </div>
+</aside>

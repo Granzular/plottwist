@@ -1,0 +1,121 @@
+{% extends 'core/public/base.html' %}
+{% load static %}
+
+{% block title %}plottwist — MATLAB to Python. Code to plots.{% endblock %}
+{% block description %}Translate MATLAB coursework into Python, generate scientific plots, and export your figures. An academic computing workspace for DSP.{% endblock %}
+
+{% block public_content %}
+<div class="site-container">
+    <section class="landing-hero" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+            <p class="eyebrow">Scientific computing, made practical</p>
+            <h1 id="hero-heading">MATLAB to Python.<br><span>Code to plots.</span></h1>
+            <p class="hero-lede">Turn MATLAB scripts into Python, explore the resulting plots, and take your figures into your next DSP practical.</p>
+            <div class="hero-actions">
+                <a class="site-button" href="{% url 'core:home' %}">Open Workspace <span aria-hidden="true">→</span></a>
+                <a class="text-link" href="#how-it-works">How it works <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="hero-footnote">For students, educators, and the work between code and understanding.</p>
+        </div>
+        <div class="hero-preview" aria-label="Preview of the actual plottwist workspace">
+            <figure class="preview-editor">
+                <figcaption><span>01 / SOURCE → PYTHON</span><span class="preview-label">The workspace</span></figcaption>
+                <a href="{% static 'media/screenshot-1.PNG' %}" target="_blank" rel="noopener" aria-label="View the MATLAB editor and generated Python screenshot at full size (opens in a new tab)">
+                    <img src="{% static 'media/screenshot-1.PNG' %}" width="1366" height="659" alt="plottwist workspace with editable MATLAB source beside read-only generated Python" fetchpriority="high">
+                </a>
+            </figure>
+            <figure class="preview-plots">
+                <figcaption><span>02 / SIGNAL → FIGURES</span><span class="preview-label">Actual output</span></figcaption>
+                <a href="{% static 'media/screenshot-2.PNG' %}" target="_blank" rel="noopener" aria-label="View the generated DSP figures screenshot at full size (opens in a new tab)">
+                    <img src="{% static 'media/screenshot-2.PNG' %}" width="1366" height="641" alt="Generated figures comparing original, noisy, and filtered signals, with frequency spectra and PNG, PDF, and DOCX downloads">
+                </a>
+            </figure>
+            <p class="preview-note">A view inside plottwist. Select an image to inspect it at full size.</p>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="landing-section" aria-labelledby="workflow-heading">
+        <div class="section-heading">
+            <p class="eyebrow">01 / The process</p>
+            <h2 id="workflow-heading">One Run. Four stages.</h2>
+            <p>Translation and execution are separate internal stages. The workspace connects them with a single Run action.</p>
+        </div>
+        <ol class="workflow-sequence" aria-label="MATLAB input, translation, Python execution, plots and exports">
+            <li><span class="step-number">01</span><h3>MATLAB Input</h3><p>Write or paste your MATLAB script into the editor.</p><span class="workflow-arrow" aria-hidden="true">→</span></li>
+            <li><span class="step-number">02</span><h3>Translation</h3><p>Groq translates the source into Python for scientific computing.</p><span class="workflow-arrow" aria-hidden="true">→</span></li>
+            <li><span class="step-number">03</span><h3>Python Execution</h3><p>A separate Python process runs the generated code.</p><span class="workflow-arrow" aria-hidden="true">→</span></li>
+            <li><span class="step-number">04</span><h3>Plots and Exports</h3><p>Inspect figures and output, then download what you need.</p></li>
+        </ol>
+        <div class="output-preview">
+            <div>
+                <h3>See what happened.</h3>
+                <p>The command window keeps numerical output, translation warnings, and execution errors alongside your results.</p>
+                <a class="text-link" href="{% url 'core:user_guide' %}#command-output">Reading the command window <span aria-hidden="true">→</span></a>
+            </div>
+            <figure class="screenshot-frame">
+                <a href="{% static 'media/screenshot-3.PNG' %}" target="_blank" rel="noopener" aria-label="View the command window screenshot at full size (opens in a new tab)">
+                    <img src="{% static 'media/screenshot-3.PNG' %}" width="1295" height="217" alt="Command window displaying numerator and denominator filter coefficients, an execution duration, and expandable diagnostics" loading="lazy">
+                </a>
+                <figcaption>Command output from a digital filtering example.</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="landing-section capability-section" aria-labelledby="capabilities-heading">
+        <div class="section-heading">
+            <p class="eyebrow">02 / The tools</p>
+            <h2 id="capabilities-heading">Work through the whole practical.</h2>
+            <p>Source, translation, figures, and feedback in one focused workspace.</p>
+        </div>
+        <dl class="capability-list">
+            <div><dt>Translate and inspect</dt><dd>Translate MATLAB into Python and review the generated source in a read-only panel.</dd></div>
+            <div><dt>Execute and visualize</dt><dd>Run Python with NumPy, Matplotlib, and SciPy. View scientific figures in their creation order.</dd></div>
+            <div><dt>Read the feedback</dt><dd>See standard output, translation warnings, execution diagnostics, and clear stage-specific errors.</dd></div>
+            <div><dt>Export your work</dt><dd>Download individual figures as PNG, PDF, or DOCX. Combine selected figures in a PDF or DOCX, and download generated Python or original MATLAB source.<span class="format-line">FIGURES: PNG / PDF / DOCX &nbsp; · &nbsp; SOURCE: .py / .m</span></dd></div>
+        </dl>
+    </section>
+
+    <section class="landing-section academic-section" aria-labelledby="academic-heading">
+        <div class="academic-intro">
+            <div class="section-heading">
+                <p class="eyebrow">03 / In the lab</p>
+                <h2 id="academic-heading">A companion for DSP coursework.</h2>
+                <p>Move between mathematical ideas, numerical code, and visual results. plottwist is intended for students working through practicals and educators explaining signal processing.</p>
+                <a class="text-link" href="{% url 'core:about' %}">Why plottwist exists <span aria-hidden="true">→</span></a>
+            </div>
+            <ul class="use-case-list" aria-label="Intended academic use cases">
+                <li><span>01</span>Signal generation</li>
+                <li><span>02</span>Discrete-time signal operations</li>
+                <li><span>03</span>Convolution</li>
+                <li><span>04</span>Fourier analysis</li>
+                <li><span>05</span>Digital filter design</li>
+                <li><span>06</span>Frequency-domain analysis</li>
+            </ul>
+        </div>
+        <figure class="academic-figure screenshot-frame">
+            <a href="{% static 'media/screenshot-2.PNG' %}" target="_blank" rel="noopener" aria-label="Inspect the time-domain and frequency-domain plot example at full size (opens in a new tab)">
+                <img src="{% static 'media/screenshot-2.PNG' %}" width="1366" height="641" alt="plottwist displaying a filtering practical: time-domain signals on the left and frequency spectra before and after filtering on the right" loading="lazy">
+            </a>
+            <figcaption><span>Time domain ↔ Frequency domain</span><span>A real workspace example. Compatibility depends on your script.</span></figcaption>
+        </figure>
+    </section>
+
+    <section class="landing-section limitations-section" aria-labelledby="limitations-heading">
+        <div class="section-heading">
+            <p class="eyebrow">04 / Know the boundaries</p>
+            <h2 id="limitations-heading">Useful results start with careful review.</h2>
+        </div>
+        <div class="limitations-copy">
+            <p>plottwist targets a defined subset of MATLAB functionality for numerical and DSP scripts. Arbitrary MATLAB programs and every toolbox are not guaranteed to work.</p>
+            <p>Unsupported syntax may fail or need a different translation approach outside this workspace. Successful translation does not guarantee successful execution or correct numerical results.</p>
+            <p>Review generated Python, warnings, units, and plots whenever correctness matters.</p>
+            <a class="text-link" href="{% url 'core:user_guide' %}#compatibility">Read the compatibility guidance <span aria-hidden="true">→</span></a>
+        </div>
+    </section>
+
+    <section class="final-cta" aria-labelledby="cta-heading">
+        <div><p class="eyebrow">Your next practical</p><h2 id="cta-heading">Bring your code. Explore the plots.</h2><p>Start with the sample script, or paste an exercise of your own.</p></div>
+        <a class="site-button" href="{% url 'core:home' %}">Open Workspace <span aria-hidden="true">→</span></a>
+    </section>
+</div>
+{% endblock %}

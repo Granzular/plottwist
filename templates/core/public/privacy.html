@@ -1,0 +1,55 @@
+{% extends 'core/public/document.html' %}
+
+{% block title %}Privacy Policy — plottwist{% endblock %}
+{% block description %}How plottwist processes MATLAB source through Groq, executes Python, stores temporary results, and uses browser sessions.{% endblock %}
+{% block eyebrow %}Privacy Policy{% endblock %}
+{% block page_heading %}What happens to your code.{% endblock %}
+{% block page_lede %}This policy describes the current application’s data handling. It does not promise protections or retention practices for external providers or a particular hosting environment.{% endblock %}
+{% block page_meta %}<p class="document-meta">Last updated <time datetime="2026-11-25">25 November 2026</time></p>{% endblock %}
+
+{% block document_content %}
+<section>
+    <h2>Information you submit</h2>
+    <p>The workspace accepts MATLAB source, including comments and strings. Code can contain personal or confidential information; avoid submitting passwords, API keys, private datasets, or material you are not permitted to share.</p>
+    <p>Typing in the editor alone does not submit the code. Pressing Run sends the source to the application for validation, translation, and execution. The current workspace has no account registration, contact form, or saved execution history.</p>
+</section>
+<section>
+    <h2>Translation and Groq</h2>
+    <p>The current workspace uses Groq for translation. After input validation, the application sends the full submitted MATLAB source—including its comments and strings—to Groq as the user message, together with the application’s translation instructions. Groq returns generated Python and translation warnings.</p>
+    <p>This translation request does not include stored plot images or execution output. The server’s configured Groq credential authenticates the request; it is not supplied by the workspace user.</p>
+    <p>Groq is a third-party service. Its handling and retention of translation requests are governed by its own policies and the provider agreement for the configured service. plottwist does not control or guarantee Groq’s deletion or use of those requests. See <a href="https://groq.com/privacy-policy/">Groq’s Privacy Policy</a>.</p>
+</section>
+<section>
+    <h2>Python execution</h2>
+    <p>Generated Python runs in a separate process on the application server. The process uses a temporary working directory, a reduced environment, source checks, bounded output and figures, and a timeout. Its numerical work uses the installed Python scientific libraries; execution is not sent to Groq.</p>
+    <p>The service captures standard output, diagnostics, errors, and PNG figures. It attempts to remove its working directory when the managed execution call finishes, including handled failures and timeouts. Server or process crashes and filesystem errors can interrupt cleanup.</p>
+    <p>These execution controls are basic safeguards, not a complete sandbox. The child process retains the host user’s permissions, so they are not a guarantee that every submitted program is isolated.</p>
+</section>
+<section>
+    <h2>Temporary results and expiration</h2>
+    <p>When translation produces Python, the application writes a temporary result to a private server directory. This can also happen when execution fails. The result contains the original MATLAB source, generated Python, translation warnings, public output and errors, execution duration, creation time, an owner-token hash, and separate PNG files. A translation failure that produces no Python does not create a stored run.</p>
+    <p>Results on this server expire <strong>{{ artifact_ttl_seconds }} seconds after creation</strong>. The default configuration is 900 seconds (15 minutes). Expiration does not extend when you view a figure or download a file.</p>
+    <p>Each result read checks the current session’s ownership and the result’s expiration. Expired results are unavailable. Their files are removed on an expired-result access, during cleanup before a new run, or when the operator runs the artifact cleanup command. Without an idle cleanup schedule, expired files can remain until a later access or cleanup. This is not a guarantee of immediate physical deletion.</p>
+    <p>Files can survive a server restart within their lifetime. This temporary storage is separate from the database and is not a permanent save feature. Downloaded files remain on your device under your control. Hosting logs, backups, and third-party retention are not governed by the result expiration timer.</p>
+</section>
+<section>
+    <h2>Sessions, cookies, and your browser</h2>
+    <p>Opening the workspace creates an opaque owner token in a Django session. After a stored run, the session also contains its execution ID. It does not contain MATLAB source, generated Python, or image bytes.</p>
+    <p>Django stores session records in the configured database, which can be SQLite or PostgreSQL. A hosted database provider may process these records if the deployment uses one. The browser’s <code>{{ session_cookie_name }}</code> cookie identifies the session; <code>{{ csrf_cookie_name }}</code> supports Django’s request protection.</p>
+    <p>Django also provides authentication and admin tables for site administration. The workspace does not register users or store source code or plots in those tables.</p>
+    <p>The configured session lifetime on this server is {{ session_cookie_age_seconds }} seconds (the Django default is two weeks). Session expiry and result expiry are separate. Expired database session rows may remain until session cleanup is run.</p>
+    <p>The optional workspace tour stores only a completion or dismissal preference in browser local storage, under <code>plottwist.workspaceTour.v1</code>. It does not store source code or results there. Clearing site storage removes this preference and can make the first-use invitation appear again.</p>
+    <p>The current application includes no analytics or advertising trackers. Website styles, scripts, and screenshots are served as application static assets.</p>
+</section>
+<section>
+    <h2>Downloads, diagnostics, and logs</h2>
+    <p>Exports reuse stored PNGs or source text; they do not rerun translation or execution. Export documents are generated in memory for the download response and are not saved as additional database records.</p>
+    <p>Displayed diagnostics filter recognized private paths and credential patterns, and raw execution tracebacks are omitted. This filtering does not establish that every sensitive value in submitted code or printed output will be removed.</p>
+    <p>The application’s workflow logger records the exception class for unexpected stage failures rather than deliberately logging submitted source. Django, the web server, or the hosting provider may also record ordinary request information such as IP addresses, URLs, response statuses, and request times. Hosting log retention and backups depend on the deployment; this codebase does not define a universal retention policy for them.</p>
+</section>
+<section>
+    <h2>Privacy questions</h2>
+    <p>Contact <a href="mailto:ayenimichael92@gmail.com">ayenimichael92@gmail.com</a> with questions about the application’s data handling. Include the relevant concern without sending credentials or confidential source.</p>
+    <p>Future changes to processing or storage should be reflected in this policy when they are implemented. The behavior described here is the current implementation.</p>
+</section>
+{% endblock %}

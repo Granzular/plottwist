@@ -4,15 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="An academic workspace for MATLAB code, generated Python, and DSP plots.">
+    <meta name="description" content="{% block description %}An academic workspace for MATLAB code, generated Python, and DSP plots.{% endblock %}">
     <title>{% block title %}plottwist — MATLAB to Python{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="icon" href="{% static 'favicon.png' %}">
     {% block head %}{% endblock %}
 </head>
 <body class="min-h-screen bg-paper font-sans text-ink antialiased">
-    <a href="#workspace" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-10 focus:rounded focus:bg-white focus:px-4 focus:py-3 focus:text-ink focus:outline-2 focus:outline-accent">Skip to workspace</a>
+    <a href="#{% block skip_target %}workspace{% endblock %}" class="skip-link sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:rounded focus:bg-white focus:px-4 focus:py-3 focus:text-ink focus:outline-2 focus:outline-accent">{% block skip_label %}Skip to workspace{% endblock %}</a>
     {% block content %}{% endblock %}
+    <script src="{% static 'js/navigation.js' %}" defer></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

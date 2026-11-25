@@ -35,7 +35,7 @@ from . import artifacts
 class HomepageTests(TestCase):
     def test_homepage_renders_workspace(self):
         url = reverse('core:home')
-        self.assertEqual(url, '/')
+        self.assertEqual(url, '/workspace/')
         self.assertEqual(resolve(url).view_name, 'core:home')
 
         response = self.client.get(url)

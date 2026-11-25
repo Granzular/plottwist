@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+{% include 'core/includes/navigation.html' with compact=True %}
 <div class="mx-auto max-w-[1600px] px-4 py-4 sm:px-8 sm:py-6">
     <header class="mb-6 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-b border-rule pb-4">
         <div class="flex flex-wrap items-baseline gap-x-6 gap-y-1">
@@ -14,10 +15,12 @@
                 <span id="run-label">Run</span>
             </button>
             <button id="clear-source" type="button" hidden class="inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-4 disabled:cursor-wait disabled:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear source</button>
+            <button id="tour-replay" type="button" hidden class="inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Workspace tour</button>
             <p id="run-help" role="status" aria-live="polite" class="max-w-64 text-sm leading-5 text-muted">Ready to run</p>
         </div>
     </header>
 
+    {% include 'core/includes/tour.html' %}
     <main id="workspace" tabindex="-1" class="grid min-w-0 gap-6 outline-none lg:grid-cols-2">
         <form id="run-form" action="{% url 'core:run' %}" method="post" data-max-bytes="{{ max_source_bytes }}" aria-labelledby="source-heading" class="flex min-w-0 flex-col overflow-hidden rounded-md border border-rule bg-white focus-within:border-accent focus-within:ring-1 focus-within:ring-accent">
             {% csrf_token %}
@@ -51,8 +54,10 @@ grid on;{% endif %}</textarea>
         </div>
     </main>
 </div>
+{% include 'core/includes/footer.html' with compact=True %}
 {% endblock %}
 
 {% block scripts %}
 <script src="{% static 'js/workspace.js' %}" defer></script>
+<script src="{% static 'js/workspace-tour.js' %}" defer></script>
 {% endblock %}

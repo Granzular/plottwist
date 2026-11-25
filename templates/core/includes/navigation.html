@@ -1,0 +1,16 @@
+<header class="site-header{% if compact %} site-header-compact{% endif %}">
+    <div class="site-header-inner">
+        <a class="site-wordmark" href="{% url 'core:public_home' %}" aria-label="plottwist home">plottwist<span aria-hidden="true">.</span></a>
+        <button id="site-menu-toggle" class="site-menu-toggle" type="button" aria-controls="site-links" aria-expanded="true" hidden>
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h14M2 9h14M2 13h14"/></svg>
+            Menu
+        </button>
+        <nav id="site-links" class="site-links" aria-label="Primary navigation">
+            <a href="{% url 'core:public_home' %}"{% if request.resolver_match.url_name == 'public_home' %} aria-current="page"{% endif %}>Home</a>
+            <a href="{% url 'core:home' %}"{% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'run' %} aria-current="page"{% endif %}>Workspace</a>
+            <a href="{% url 'core:user_guide' %}"{% if request.resolver_match.url_name == 'user_guide' %} aria-current="page"{% endif %}>User Guide</a>
+            <a href="{% url 'core:about' %}"{% if request.resolver_match.url_name == 'about' %} aria-current="page"{% endif %}>About</a>
+            <a href="{% url 'core:contact' %}"{% if request.resolver_match.url_name == 'contact' %} aria-current="page"{% endif %}>Contact</a>
+        </nav>
+    </div>
+</header>

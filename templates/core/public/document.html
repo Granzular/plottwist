@@ -1,0 +1,15 @@
+{% extends 'core/public/base.html' %}
+
+{% block public_content %}
+<div class="site-container document-page">
+    <header class="document-header">
+        <p class="eyebrow">{% block eyebrow %}plottwist{% endblock %}</p>
+        <h1>{% block page_heading %}{% endblock %}</h1>
+        <p class="document-lede">{% block page_lede %}{% endblock %}</p>
+        {% block page_meta %}{% endblock %}
+    </header>
+    <div class="document-body">
+        {% block document_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

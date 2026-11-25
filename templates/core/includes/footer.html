@@ -1,0 +1,20 @@
+<footer class="site-footer{% if compact %} site-footer-compact{% endif %}">
+    <div class="site-footer-inner">
+        <div class="footer-brand">
+            <a class="site-wordmark" href="{% url 'core:public_home' %}">plottwist<span aria-hidden="true">.</span></a>
+            <p>MATLAB to Python. Code to plots.</p>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+            <a href="{% url 'core:user_guide' %}"{% if request.resolver_match.url_name == 'user_guide' %} aria-current="page"{% endif %}>User Guide</a>
+            <a href="{% url 'core:about' %}"{% if request.resolver_match.url_name == 'about' %} aria-current="page"{% endif %}>About</a>
+            <a href="{% url 'core:contact' %}"{% if request.resolver_match.url_name == 'contact' %} aria-current="page"{% endif %}>Contact</a>
+            <a href="{% url 'core:privacy' %}"{% if request.resolver_match.url_name == 'privacy' %} aria-current="page"{% endif %}>Privacy Policy</a>
+            <a href="{% url 'core:terms' %}"{% if request.resolver_match.url_name == 'terms' %} aria-current="page"{% endif %}>Terms of Use</a>
+        </nav>
+        <div class="footer-contact">
+            <a href="https://github.com/Granzular">GitHub <span aria-hidden="true">↗</span></a>
+            <a href="mailto:ayenimichael92@gmail.com">ayenimichael92@gmail.com</a>
+        </div>
+        <p class="footer-note">An academic computing tool for DSP coursework and experimentation.</p>
+    </div>
+</footer>

@@ -1,0 +1,46 @@
+{% extends 'core/public/document.html' %}
+
+{% block title %}Terms of Use — plottwist{% endblock %}
+{% block description %}Readable terms for using plottwist for academic MATLAB-to-Python translation, numerical execution, and scientific plots.{% endblock %}
+{% block eyebrow %}Terms of Use{% endblock %}
+{% block page_heading %}Use thoughtfully. Review the results.{% endblock %}
+{% block page_lede %}plottwist supports academic and educational work. These terms explain the responsibilities and practical limits of using the workspace.{% endblock %}
+{% block page_meta %}<p class="document-meta">Last updated <time datetime="2026-11-25">25 November 2026</time></p>{% endblock %}
+
+{% block document_content %}
+<section>
+    <h2>Intended use</h2>
+    <p>Use plottwist to explore MATLAB-to-Python translation, DSP exercises, and scientific visualization. Follow the rules of your course or institution, including requirements about assisted work and attribution.</p>
+    <p>plottwist targets a limited translation scope. It is not a certified MATLAB replacement, and arbitrary MATLAB programs or specialized toolboxes are not guaranteed to work.</p>
+</section>
+<section>
+    <h2>Your submitted code</h2>
+    <p>Submit only code and information you are permitted to use and transmit to an external translation provider. Do not include secrets or confidential material. The current workflow sends MATLAB source to Groq; read the <a href="{% url 'core:privacy' %}">Privacy Policy</a> before submitting.</p>
+    <p>Do not use the execution service for malicious code, unauthorized access, disruptive workloads, or attempts to bypass execution limits and source checks.</p>
+</section>
+<section>
+    <h2>Translations and numerical results</h2>
+    <p>A successful translation means the provider returned Python that passed syntax validation. It does not prove mathematical equivalence, execution success, or numerical accuracy.</p>
+    <p>You are responsible for reviewing generated Python, translation warnings, units, indexing, sampling, and numerical results before relying on them. Compare important results with the exercise specification or a trusted reference.</p>
+    <p>The read-only panel is for inspection. Download Python if you need to edit or validate it in your own environment.</p>
+</section>
+<section>
+    <h2>Execution and temporary access</h2>
+    <p>Execution has limits on source size, imports and operations, runtime, command output, figure count, and image size. Translation and execution may fail independently. Basic process safeguards do not constitute a complete security sandbox.</p>
+    <p>Results are temporary and session-specific. Download files you need while they are available; the workspace is not a permanent archive. Exporting uses the stored figures and does not recompute your results.</p>
+</section>
+<section>
+    <h2>Code, ownership, and permissions</h2>
+    <p>You remain responsible for the rights, permissions, and license obligations associated with your submitted code and use of generated output. Using the service does not give you permission to reuse another person’s protected code or material.</p>
+    <p>Ownership and permitted use of source and generated material can depend on applicable law, source licenses, and provider terms. plottwist does not determine those rights or grant a general license to third-party material.</p>
+</section>
+<section>
+    <h2>Availability and changes</h2>
+    <p>The application is under development. Features, translation behavior, limits, and availability may change, and the service may be interrupted or withdrawn. No uninterrupted availability or fitness for a particular assessment is promised.</p>
+    <p>Check the guide and these pages for the current behavior. Keep your own copies of code and exports you need.</p>
+</section>
+<section>
+    <h2>Questions</h2>
+    <p>Contact <a href="mailto:ayenimichael92@gmail.com">ayenimichael92@gmail.com</a> about these terms, or visit <a href="https://github.com/Granzular">github.com/Granzular</a> for the maintainer’s GitHub profile.</p>
+</section>
+{% endblock %}

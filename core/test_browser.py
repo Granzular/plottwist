@@ -17,6 +17,7 @@ from unittest.mock import patch
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import SimpleTestCase, override_settings
+from django.urls import reverse
 from docx import Document
 from PIL import Image
 from pypdf import PdfReader
@@ -161,7 +162,7 @@ class WorkspaceBrowserTests(StaticLiveServerTestCase):
         result = subprocess.run(
             [
                 self.node, str(Path(__file__).with_name('browser_tests.cjs')),
-                self.live_server_url, str(self.port), str(downloads),
+                self.live_server_url + reverse('core:home'), str(self.port), str(downloads),
             ],
             capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180,
         )

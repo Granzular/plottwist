@@ -1,0 +1,31 @@
+{% extends 'core/public/document.html' %}
+
+{% block title %}About — plottwist{% endblock %}
+{% block description %}Why plottwist exists: an academic MATLAB-to-Python workspace for DSP coursework, scientific computing, and visualization.{% endblock %}
+{% block eyebrow %}About the project{% endblock %}
+{% block page_heading %}Between code and understanding.{% endblock %}
+{% block page_lede %}plottwist is an academic computing tool for translating MATLAB scripts into Python and exploring the resulting scientific plots.{% endblock %}
+
+{% block document_content %}
+<section>
+    <h2>Why it exists</h2>
+    <p>DSP practicals often begin with MATLAB code. plottwist provides a way to work through those exercises using the Python scientific computing ecosystem, without requiring a MATLAB installation for the supported workflow.</p>
+    <p>The aim is practical: make it easier to connect source code, numerical operations, and visual results while learning signal processing.</p>
+</section>
+<section>
+    <h2>The approach</h2>
+    <p>A single Run action starts two separate stages. Groq translates submitted MATLAB into Python, then a separate Python process executes the generated code with NumPy, Matplotlib, and SciPy available.</p>
+    <p>The workspace presents editable MATLAB, read-only Python, ordered figures, and command output. Figures and source files can be downloaded for further study or coursework.</p>
+</section>
+<section>
+    <h2>Who it is for</h2>
+    <p>Students working through DSP exercises, educators demonstrating scientific computing, and learners exploring the relationship between MATLAB and Python.</p>
+    <p>The translation scope is limited. Review generated code and numerical results, especially when indexing, sample counts, matrix operations, or toolbox behavior affect an answer.</p>
+    <a class="text-link" href="{% url 'core:user_guide' %}#compatibility">Understand the current scope <span aria-hidden="true">→</span></a>
+</section>
+<div class="document-callout">
+    <h2>MATLAB to Python. Code to plots.</h2>
+    <p>Try the sampled sine wave already in the editor.</p>
+    <a class="site-button" href="{% url 'core:home' %}">Open Workspace <span aria-hidden="true">→</span></a>
+</div>
+{% endblock %}
