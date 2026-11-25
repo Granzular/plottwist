@@ -81,6 +81,7 @@
     };
 
     const resize = () => {
+        if (disposed) return;
         const bounds = hero.getBoundingClientRect();
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
         if (bounds.width === width && bounds.height === height && ratio === pixelRatio) return;
