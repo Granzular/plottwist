@@ -192,7 +192,7 @@
             matlabDownloadHelp.hidden = !result.matlab_download_url;
             if (result.matlab_download_url) matlabDownload.href = result.matlab_download_url;
             else matlabDownload.removeAttribute('href');
-            status.textContent = result.success ? 'Run completed.' : 'Run could not complete. See the Command window.';
+            status.innerHTML = result.success ? 'Run completed. Results are available below.'+ '<a class="text-[#31543f] font-medium" href="#figure-workspace">View results ↓</a>' : 'Run could not complete. See the '+'<a href="#command-panel" class=" font-medium text-[#31543f]">Command window</a> below.';
         } catch (error) {
             status.textContent = error instanceof TypeError
                 ? 'Connection failed. Your source has been kept. Try again.'
